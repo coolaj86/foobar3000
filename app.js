@@ -71,6 +71,18 @@
 
 
     //
+    // Set RAW
+    //
+    rawBody = (urlObj.query.raw) || (urlObj.body && urlObj.body.raw) || undefined;
+    if (rawBody) {
+      // the connection is most likely keepalive
+      // calling .end is not necessary?
+      res.socket.write(rawBody);
+      return;
+    }
+
+
+    //
     // Get Session
     //
     sessionToken = urlObj.query.session || (urlObj.body && urlObj.body.session) || req.headers['X-Foobar3k-Session'] || newToken();
@@ -104,15 +116,9 @@
 
 
     //
-    // Set RAW
+    // set STATUS
     //
-    rawBody = (urlObj.query.raw) || (urlObj.body && urlObj.body.raw) || undefined;
-    if (rawBody) {
-      // the connection is most likely keepalive
-      // calling .end is not necessary?
-      res.socket.write(rawBody);
-      return;
-    }
+    res.statusCode = (urlObj.body && urlObj.body.status) || urlObj.query.status || res.statusCode;
 
 
     //
