@@ -43,6 +43,35 @@
   request('/echo').when(function (err, ahr, data) {
     console.log(arguments);
   });
+
+
+  // Use foobar3000.com to create a CORS resource
+  // (attached to session)
+  function createCorsResource() {
+    request.post('/meta', null, {
+        session: "make-up-your-own-key"
+      , pathname: "/hello-cors"
+      , headers: [
+            "Access-Control-Allow-Origin: *"
+          , "Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS"
+          , "Access-Control-Allow-Headers: Content-Type, Accept"
+        ]
+      , body: "Hello CORS World!"
+    }, { headers: { "content-type": "application/json"} }).when(function (err, ahr, data) {
+      console.log(arguments);
+      getCorsResource();
+    });
+  }
+
+  // Access the aforementioned resource from helloworld3000.com
+  // (must use same session key)
+  function getCorsResource() {
+    request.get('http://helloworld3000.com/hello-cors?session=make-up-your-own-key').when(function (err, ahr, data) {
+      console.log(arguments);
+    });
+  }
+
+  createCorsResource();
 </code>
     </pre>
   </body>
