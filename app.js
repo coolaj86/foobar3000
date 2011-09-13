@@ -95,6 +95,17 @@
     // TODO If not params load index.html, else echo
 
     //
+    // Set RAW
+    //
+    if (params.raw) {
+      // the connection is most likely keepalive
+      // calling .end is not necessary?
+      res.socket.write(params.raw);
+      return;
+    }
+
+
+    //
     // Get Session
     //
     sessionToken = params.session || req.headers['X-Foobar3k-Session'] || newToken();
@@ -171,21 +182,15 @@
 
 
     //
-    // Set RAW
+    // set STATUS
     //
-    if (params.raw) {
-      console.log('params.raw', params.raw.toString());
-      // the connection is most likely keepalive
-      // calling .end is not necessary?
-      res.socket.write(params.raw);
-      return;
-    }
+    res.statusCode = params.status || res.statusCode;
 
 
     //
     // Set BODY
     //
-    resBody = (params.body) || (params.rawBody && params.body) || urlObj;
+    resBody = params.body || urlObj;
     /*
     if (/HEAD|OPTIONS/.exec(req.method)) {
       resBody = undefined;
