@@ -5,12 +5,25 @@
     </script>
   </head>
   <body>
-    Foobar3000.com - the world's most advanced test server
+    Foobar3000.com - The world's most advanced echo server!
     <p>
-    <a href="http://checkip.foobar3000.com">checkip.foobar3000.com</a>
+      <a href="https://github.com/coolaj86/foobar3000">github.com/coolaj86/foobar3000</a> - A better README than this page.
+    </p>
+    <ul>
+      <li>`GET /` with no parameters returns this page</li>
+      <li>`[VERB] /echo?foo=bar` will echo the parameters you have given</li>
+      <li>`GET /echo?headers=X-Test-Header%3A%20Hello%2FWorld` replies to the request with the additional header `X-Test-Header: Hello World`</li>
+      <li>`GET /echo?body=Hello%20World%0A` replies to the request with the body `Hello World\n`</li>
+      <li>`POST /meta?session=same-token&pathname=%2Ffoobar&body=Hello%20Foo%0A` creates the resource `/foobar` for the session `same-token` with whatever headers and body specified</li>
+      <li>`GET /foobar?session=same-token` response with the resource just created (or an echo if there was none)</li>
+      <li>`GET /checkip` returns your IP Address as `text/plain`, no html, no spaces, no need to `.trim()`</li>
+      <li>Any sessions created will be deleted after 10 minutes of inactivity</li>
+    </ul>
+    <p>
+      What's your IP? <a href="http://checkip.foobar3000.com">checkip.foobar3000.com</a> - no muss, no fuss, no markup, no `sed`, `awk`, or `.trim()` needed.
     </p>
     <p>
-    <a href="http://sandbox.foobar3000.com">sandbox.foobar3000.com</a>
+      <a href="http://helloworld3000.com">helloworld3000.com</a> - An alias of foobar3000.com suitable for testing CORS, XSS, etc. 
     </p>
   </body>
 </html>

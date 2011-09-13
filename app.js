@@ -45,6 +45,10 @@
 
     console.log('Echo Echo Echo...');
 
+    if (/GET/i.exec(req.method) && '/' === req.url && !req.body) {
+      return next();
+    }
+
     // If the user just wants the IP address
     if (ipcheck.exec(req.url)) {
       res.setHeader('Content-Type', 'text/plain');
@@ -181,7 +185,7 @@
     //
     // Set BODY
     //
-    resBody = (params.body && params.body.body) || (params.rawBody && params.body) || urlObj;
+    resBody = (params.body) || (params.rawBody && params.body) || urlObj;
     /*
     if (/HEAD|OPTIONS/.exec(req.method)) {
       resBody = undefined;
@@ -227,8 +231,8 @@
     , connect.favicon()
     , connect.bodyParser()
     , bodySnatcher
-    , connect.static(__dirname + '/')
     , echo
+    , connect.static(__dirname + '/')
   );
 
   echoServer = connect.createServer(

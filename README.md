@@ -1,7 +1,10 @@
 FooBar3000
 ===
 
-The world's most advanced HTTP Echo Server!
+The world's most advanced Echo Server!
+
+HTTP is supported.
+TCP and UDP are in the works.
 
 Installation & Usage
 ---
@@ -19,7 +22,7 @@ Echo
 
 Gives back a JSON representation of your request:
 
-    curl -v "http://${HOST}/?foo=bar&baz=qux&baz=quux"
+    curl "http://${HOST}/?foo=bar&baz=qux&baz=quux"
 
 Manipulate Response Headers
 ---
