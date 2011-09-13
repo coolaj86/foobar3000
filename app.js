@@ -45,7 +45,7 @@
 
     console.log('Echo Echo Echo...');
 
-    if (/GET/i.exec(req.method) && '/' === req.url && !req.body) {
+    if (/GET/i.exec(req.method) && '/' === req.url && !req.body || /ender\.js/.exec(req.url)) {
       return next();
     }
 
