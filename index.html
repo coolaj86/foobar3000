@@ -1,10 +1,13 @@
 <html>
   <head>
     <title>Foobar3000 - the world's most advanced test server</title>
-    <script src="ender.js"></script>
+    <script src="assets/ender.js"></script>
   </head>
   <body>
     Foobar3000.com - The world's most advanced echo server!
+
+  <div id="http">
+    <h2>HTTP Echo</h2>
     <p>
       <a href="https://github.com/coolaj86/foobar3000">github.com/coolaj86/foobar3000</a> - A better README than this page.
     </p>
@@ -74,5 +77,48 @@
   createCorsResource();
 </code>
     </pre>
+  </div>
+
+  <div id="tcp">
+    <h2>TCP Echo</h2>
+
+    Persistent connection:
+    <pre><code>
+      nc foobar3000.com 32000
+    </code></pre>
+
+    Persistent connection with keepalive:
+    <pre><code>
+      nc foobar3000.com 32001
+    </code></pre>
+
+    TODO: Connection that hangs up and dials back
+    <pre><code>
+      # Not Implemented Yet!
+      echo '{ "port": "5432", "body": "Hello World" }' | nc foobar3000.com 32002
+    </code></pre>
+  </div>
+
+  <div id="udp">
+    <h2>UDP Echo</h2>
+
+    Persistent (responds from bound listener):
+    <pre><code>
+      nc -u foobar3000.com 32000
+    </code></pre>
+
+    Redial (responds from new unbound client, probably different port):
+    <pre><code>
+      # you won't see a response when using netcat 
+      # because the port will be different 
+      nc -u foobar3000.com 32001
+    </code></pre>
+
+    TODO: Connection that dials back on a different port:
+    <pre><code>
+      # Not Implemented Yet!
+      echo '{ "port": "5432", "body": "Hello World" }' | nc -u foobar3000.com 32002
+    </code></pre>
+  </div>
   </body>
 </html>

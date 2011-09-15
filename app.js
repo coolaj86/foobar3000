@@ -3,6 +3,14 @@
 
   require('bufferjs');
 
+  require('./tcp-echo');
+  require('./tcp-echo-keepalive');
+  // TODO require('./tcp-echo-redial');
+  // TODO require('./tcp-echo-dial');
+  require('./udp-echo');
+  require('./udp-echo-redial');
+  // TODO require('./udp-echo-dial');
+
   var config = require('./config')
     , connect = require('connect')
     , btoa = require('btoa')
@@ -45,7 +53,7 @@
 
     console.log('Echo Echo Echo...');
 
-    if (/GET/i.exec(req.method) && '/' === req.url && !req.body || /ender\.js/.exec(req.url)) {
+    if (/GET/i.exec(req.method) && '/' === req.url && !req.body || /assets/.exec(req.url)) {
       return next();
     }
 
