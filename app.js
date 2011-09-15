@@ -278,22 +278,20 @@
 
   middleware = middleware.concat([
       connect.vhost('foobar3000.com', server)
-    , connect.vhost('sandbox.foobar3000.com', echoServer)
     , connect.vhost('whatsmyip.foobar3000.com', whatsmyip)
     , connect.vhost('checkip.foobar3000.com', whatsmyip)
     , connect.vhost('myip.foobar3000.com', whatsmyip)
     , connect.vhost('ip.foobar3000.com', whatsmyip)
-    , connect.vhost('*foobar3000.com', echoServer)
+    , connect.vhost('*foobar3000.com', server)
   ]);
 
   middleware = middleware.concat([
       connect.vhost('helloworld3000.com', server)
-    , connect.vhost('sandbox.helloworld3000.com', echoServer)
     , connect.vhost('whatsmyip.helloworld3000.com', whatsmyip)
     , connect.vhost('checkip.helloworld3000.com', whatsmyip)
     , connect.vhost('myip.helloworld3000.com', whatsmyip)
     , connect.vhost('ip.helloworld3000.com', whatsmyip)
-    , connect.vhost('*helloworld3000.com', echoServer)
+    , connect.vhost('*helloworld3000.com', server)
   ]);
 
   module.exports = connect.createServer.apply(connect, middleware);
