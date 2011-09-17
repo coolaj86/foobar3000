@@ -10,6 +10,22 @@
       console.log("[Server] On Listen. [" + server.address() + "]");
   }
 
+  function formatBody(data) {
+    var body;
+
+    body = data.body || data;
+
+    if (data.error) {
+      return data.error;
+    }
+
+    if ('string' !== typeof body) {
+      body = JSON.stringify(body);
+    }
+
+    return body;
+  }
+
   function onConnection(stream) {
     console.log("[Server] On Connection. [" + server.connections + "]");
 
@@ -30,6 +46,54 @@
 
     stream.on('data', function (data) {
       console.log("\t[Stream] On Data");
+
+      var i = 0;
+      while (/\s/.exec(String.fromCharCode(data[i]))) {
+        i += 1;
+      }
+
+      if ('{' === String.fromCharCode(data[i])) {
+        try {
+          data = JSON.parse(data);
+        } catch(e) {
+          // ignore
+          console.log('\t[Stream] JSON Parse Error');
+        }
+
+        if (undefined !== data.keepalive) {
+          stream.setKeepAlive(data.keepalive);
+        }
+
+        if (parseInt(data.port)) {
+          console.log('[New Client] On Create Connection', stream.remoteAddress + ':' + data.port);
+
+          var client = net.createConnection(data.port, stream.remoteAddress)
+            ;
+
+          client.on('error', function (err) {
+            data.error = err.message;
+            console.log('[New Client] On Error', data.error);
+            stream.write(formatBody(data));
+          });
+
+          client.on('connect', function () {
+            console.log('[New Client] On Connect', data.error);
+            client.write(data.body || data);
+            //stream.write("reconnected to " + stream.remoteAddress + ":" + data.port);
+            onConnection(client);
+          });
+
+          return;
+        }
+
+        if (data.body) {
+          data = data.body;
+          if ('string' !== typeof data) {
+            data = JSON.stringify(data);
+          }
+        }
+      }
+
       stream.write(data);
     });
 
@@ -51,7 +115,7 @@
 
     stream.on('error', function (err) {
       // not used in this example
-      console.log("\t[Stream] On Error" + err.message);
+      console.log("\t[Stream] On Error", err.message, stream.remotePort);
     });
 
     stream.on('close', function (had_error) {
