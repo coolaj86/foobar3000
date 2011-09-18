@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <title>JavaScript NetScan</title>
+    <script src="./ender.js"></script>
+    <script src="./netscan.js"></script>
+  </head>
+  <body>
+
+    <form id="ping" action="#ping">
+      Check Port:
+      <input name='hostname' placeholder="IP Address (i.e. 192.168.1.1)" />:<input name='port' placeholder="Port (i.e. 80)" />
+      <br/>
+      <input type="submit" value="Check Port"/>
+    </form>
+
+    <form id="ipscan" action="#ipscan">
+      IP-scan Port:
+      <input name='port' placeholder="Port (i.e. 80)" />
+      <br/>
+      <input name='ip-network' placeholder="Network Address (i.e. 192.168.1)" />.0
+      <br/>
+      <input name='ip-range' placeholder="Range (i.e. 1-3,5,6-8,9)" />
+      <br/>
+      <input type="submit" value="IP Scan"/>
+    </form>
+
+    <form id="portscanner" action="#portscan">
+      Port-scan Address:
+      <input placeholder="IP Address (i.e. 192.168.1.1)" />
+      <br/>
+      <input placeholder="Start Port (i.e. 3000)" /> - <input placeholder="End Port (i.e. 3100)" />
+      <br/>
+      <input type="submit" value="Port Scan"/>
+    </form>
+    
+  </body>
+</html>
