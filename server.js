@@ -272,6 +272,7 @@
 
   middleware = [];
 
+  // TODO inspect subdomains instead of using vhost a second time
   middleware = middleware.concat([
       connect.vhost('foobar3000.com', server)
     , connect.vhost('whatsmyip.foobar3000.com', whatsmyip)
@@ -288,7 +289,6 @@
     , connect.vhost('myip.helloworld3000.com', whatsmyip)
     , connect.vhost('ip.helloworld3000.com', whatsmyip)
     , connect.vhost('*helloworld3000.com', server)
-    , connect.vhost('*', server)
   ]);
 
   module.exports = connect.createServer.apply(connect, middleware);
