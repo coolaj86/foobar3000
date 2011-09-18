@@ -293,5 +293,9 @@
 
   module.exports = connect.createServer.apply(connect, middleware);
 
-  //module.exports.listen(8888);
+  try {
+    module.exports.listen(8080);
+  } catch(e) {
+    console.warn('[WARN] probably already bound on 8080');
+  }
 }());
