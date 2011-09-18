@@ -49,6 +49,10 @@
     console.log("[Listener] On Created Socket: port", port);
   }
 
+  function onClientCreatedSocket() {
+    console.log("[New Client] On Created Socket: port", port);
+  }
+
   function onSent(err, bytes) {
     if (err) {
       console.error(err);
@@ -63,29 +67,34 @@
 
     var json
       , client
+      , onSentCallback = onSent
       ;
 
     function onRedial() {
-      var message = new Buffer('[Info] Sent message to ' + rinfo.address + ':' + rinfo.port + '\n');
+      var message = new Buffer('[Info] Sent message to ' + rinfo.address + ':' + rinfo.port + ' from ' + (client && client.address().port || port) + '\n');
       server.send(message, 0, message.length, rinfo.port, rinfo.address, onSent);
     }
 
     json = parseJson(message);
 
     if (!json) {
-      server.send(message, 0, message.length, rinfo.port, rinfo.address, onSent);
+      server.send(message, 0, message.length, parseInt(json.port, 10) || rinfo.port, rinfo.address, onSent);
       return;
     }
 
     json.body = new Buffer(json.body && formatBody(json.body) || '[Error] must specify `body` to send\n');
     //console.log('JSON', json.body, json.body.length);
 
+    if (json.redial || json.port) {
+      onSentCallback = onRedial;
+    }
+
     if (json.redial) {
       // TODO On Error
       client = dgram.createSocket("udp4", onClientCreatedSocket);
-      client.send(json.body, 0, json.body.length, parseInt(json.port) || rinfo.port, rinfo.address, onRedial);
+      client.send(json.body, 0, json.body.length, parseInt(json.port, 10) || rinfo.port, rinfo.address, onSentCallback);
     } else {
-      server.send(json.body, 0, json.body.length, parseInt(json.port) || rinfo.port, rinfo.address, onSent);
+      server.send(json.body, 0, json.body.length, parseInt(json.port, 10) || rinfo.port, rinfo.address, onSentCallback);
     }
   }
 
