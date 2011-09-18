@@ -4,12 +4,7 @@
   require('bufferjs');
 
   require('./tcp-echo');
-  require('./tcp-echo-keepalive');
-  // TODO require('./tcp-echo-redial');
-  // TODO require('./tcp-echo-dial');
   require('./udp-echo');
-  require('./udp-echo-redial');
-  // TODO require('./udp-echo-dial');
 
   var config = require('./config')
     , connect = require('connect')
@@ -239,6 +234,7 @@
   server = connect.createServer(
       function (req, res, next) {
         console.log('Echo Blah');
+        console.log(req.subdomains);
         next();
       }
     , connect.favicon()
@@ -292,9 +288,10 @@
     , connect.vhost('myip.helloworld3000.com', whatsmyip)
     , connect.vhost('ip.helloworld3000.com', whatsmyip)
     , connect.vhost('*helloworld3000.com', server)
+    , connect.vhost('*', server)
   ]);
 
   module.exports = connect.createServer.apply(connect, middleware);
 
-  module.exports.listen(8888);
+  //module.exports.listen(8888);
 }());
