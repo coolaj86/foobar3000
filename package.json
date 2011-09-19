@@ -13,6 +13,7 @@
     "node": ">= 0.4.11"
   },
   "dependencies": {
+    "btoa": ">= 1.0.0",
     "nowww": ">= 1.0.0",
     "bufferjs": ">= 0.0.0",
     "connect": ">= 0.0.0"

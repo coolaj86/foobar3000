@@ -7,8 +7,50 @@
     , server
     ;
 
+  function formatBody(data) {
+    var body;
+
+    body = data;
+
+    if (data.error) {
+      return data.error;
+    }
+
+    if ('string' !== typeof body) {
+      body = JSON.stringify(body);
+    }
+
+    return body;
+  }
+
+  function parseJson(data) {
+    var i = 0;
+
+    while (/\s/.exec(String.fromCharCode(data[i]))) {
+      i += 1;
+    }
+
+    if ('{' !== String.fromCharCode(data[i])) {
+      return;
+    }
+
+    try {
+      data = JSON.parse(data);
+    } catch(e) {
+      // ignore
+      console.log('\t[Stream] JSON Parse Error');
+      data = undefined;
+    }
+
+    return data;
+  }
+
   function onCreatedSocket() {
     console.log("[Listener] On Created Socket: port", port);
+  }
+
+  function onClientCreatedSocket() {
+    console.log("[New Client] On Created Socket: port", port);
   }
 
   function onSent(err, bytes) {
@@ -22,7 +64,38 @@
 
   function onMessage(message, rinfo) {
     console.log("[Listener] On Message: " + message + " from " + rinfo.address + ":" + rinfo.port);
-    server.send(message, 0, message.length, rinfo.port, rinfo.address, onSent);
+
+    var json
+      , client
+      , onSentCallback = onSent
+      ;
+
+    function onRedial() {
+      var message = new Buffer('[Info] Sent message to ' + rinfo.address + ':' + rinfo.port + ' from ' + (client && client.address().port || port) + '\n');
+      server.send(message, 0, message.length, rinfo.port, rinfo.address, onSent);
+    }
+
+    json = parseJson(message);
+
+    if (!json) {
+      server.send(message, 0, message.length, parseInt(json.port, 10) || rinfo.port, rinfo.address, onSent);
+      return;
+    }
+
+    json.body = new Buffer(json.body && formatBody(json.body) || '[Error] must specify `body` to send\n');
+    //console.log('JSON', json.body, json.body.length);
+
+    if (json.redial || json.port) {
+      onSentCallback = onRedial;
+    }
+
+    if (json.redial) {
+      // TODO On Error
+      client = dgram.createSocket("udp4", onClientCreatedSocket);
+      client.send(json.body, 0, json.body.length, parseInt(json.port, 10) || rinfo.port, rinfo.address, onSentCallback);
+    } else {
+      server.send(json.body, 0, json.body.length, parseInt(json.port, 10) || rinfo.port, rinfo.address, onSentCallback);
+    }
   }
 
   function onListening() {

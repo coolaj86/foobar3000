@@ -4,7 +4,12 @@
     <script src="assets/ender.js"></script>
   </head>
   <body>
-    Foobar3000.com - The world's most advanced echo server!
+    <h1>Foobar3000.com - The world's most advanced echo server!</h1>
+    <ul>
+        <li>HTTP Echo on ports 80, 8080</li>
+        <li>TCP Echo on port 32000</li>
+        <li>UDP Echo on port 32000</li>
+    </ul>
 
   <div id="http">
     <h2>HTTP Echo</h2>
@@ -84,19 +89,31 @@
 
     Persistent connection:
     <pre><code>
+      nc -l -p 5000 # GNU netcat
+      # nc -l 5000 # BSD netcat
+
       nc foobar3000.com 32000
+      Hey you!
+      { "keepalive": true }
+      { "keepalive": false }
+      { "body": "Hello\n" }
+        { "body": "Hello\n" }
+      { "body": "Hello\n" NOT JSON }
+      { "body": "Hello\n", "port": 5000 }
+      { "port": 5000 }
+      { "body": "Hello\n", "port": 5000 }
     </code></pre>
-
-    Persistent connection with keepalive:
-    <pre><code>
-      nc foobar3000.com 32001
-    </code></pre>
-
-    TODO: Connection that hangs up and dials back
-    <pre><code>
-      # Not Implemented Yet!
-      echo '{ "port": "5432", "body": "Hello World" }' | nc foobar3000.com 32002
-    </code></pre>
+    <ul>
+      <li>
+        keepalive - wether or not to send extra `ACK`s to verify connection
+      </li>
+      <li>
+        body - the message to send back
+      </li>
+      <li>
+        port - the port to connect back to (will connect from a different port)
+      </li>
+    </ul>
   </div>
 
   <div id="udp">
@@ -104,21 +121,28 @@
 
     Persistent (responds from bound listener):
     <pre><code>
+      nc -u -l -p 5000 # BSD netcat
+
       nc -u foobar3000.com 32000
+      Hey you!
+        { "body": "Hello\n" }
+      { "body": "Hello\n" NOT JSON }
+      { "port": 5000 }
+      { "body": "Hello\n", "redial": true }
+      { "body": "Hello\n", "port": 5000 }
+      { "body": "Hello\n", "redial": true, "port": 5000 }
     </code></pre>
-
-    Redial (responds from new unbound client, probably different port):
-    <pre><code>
-      # you won't see a response when using netcat 
-      # because the port will be different 
-      nc -u foobar3000.com 32001
-    </code></pre>
-
-    TODO: Connection that dials back on a different port:
-    <pre><code>
-      # Not Implemented Yet!
-      echo '{ "port": "5432", "body": "Hello World" }' | nc -u foobar3000.com 32002
-    </code></pre>
+    <ul>
+      <li>
+        body - the message to send back
+      </li>
+      <li>
+        port - the port to send back to (will be the same unless `redial` is requested
+      </li>
+      <li>
+        redial - whether to use the bound port or a random port to respond
+      </li>
+    </ul>
   </div>
   </body>
 </html>

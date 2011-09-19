@@ -4,12 +4,7 @@
   require('bufferjs');
 
   require('./tcp-echo');
-  require('./tcp-echo-keepalive');
-  // TODO require('./tcp-echo-redial');
-  // TODO require('./tcp-echo-dial');
   require('./udp-echo');
-  require('./udp-echo-redial');
-  // TODO require('./udp-echo-dial');
 
   var config = require('./config')
     , connect = require('connect')
@@ -239,6 +234,7 @@
   server = connect.createServer(
       function (req, res, next) {
         console.log('Echo Blah');
+        console.log(req.subdomains);
         next();
       }
     , connect.favicon()
@@ -276,6 +272,7 @@
 
   middleware = [];
 
+  // TODO inspect subdomains instead of using vhost a second time
   middleware = middleware.concat([
     , connect.vhost('whatsmyip.*', whatsmyip)
     , connect.vhost('checkip.*', whatsmyip)
@@ -288,5 +285,9 @@
 
   module.exports = connect.createServer.apply(connect, middleware);
 
-  module.exports.listen(8888);
+  try {
+    module.exports.listen(8080);
+  } catch(e) {
+    console.warn('[WARN] probably already bound on 8080');
+  }
 }());
