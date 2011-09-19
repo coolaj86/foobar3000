@@ -3,8 +3,12 @@
 
   require('bufferjs');
 
-  require('./tcp-echo');
-  require('./udp-echo');
+  try {
+    require('./tcp-echo');
+    require('./udp-echo');
+  } catch(e) {
+    console.warn("[TODO] switch tcp and udp ports for development");
+  }
 
   var config = require('./config')
     , connect = require('connect')
@@ -273,20 +277,20 @@
   middleware = [];
 
   // TODO inspect subdomains instead of using vhost a second time
-  middleware = middleware.concat([
-    , connect.vhost('whatsmyip.*', whatsmyip)
+  middleware = [
+      connect.vhost('whatsmyip.*', whatsmyip)
     , connect.vhost('checkip.*', whatsmyip)
     , connect.vhost('myip.*', whatsmyip)
     , connect.vhost('ip.*', whatsmyip)
-    , connect.vhost('*helloworld3000', server)
-    , connect.vhost('*foobar3000', server)
+    , connect.vhost('*helloworld3000.*', server)
+    , connect.vhost('*foobar3000.*', server)
     , connect.vhost('*', server)
-  ]);
+  ];
 
   module.exports = connect.createServer.apply(connect, middleware);
 
   try {
-    module.exports.listen(8080);
+    connect.createServer.apply(connect, middleware).listen(8080);
   } catch(e) {
     console.warn('[WARN] probably already bound on 8080');
   }
