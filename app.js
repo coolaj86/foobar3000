@@ -277,21 +277,13 @@
   middleware = [];
 
   middleware = middleware.concat([
-      connect.vhost('foobar3000.com', server)
-    , connect.vhost('whatsmyip.foobar3000.com', whatsmyip)
-    , connect.vhost('checkip.foobar3000.com', whatsmyip)
-    , connect.vhost('myip.foobar3000.com', whatsmyip)
-    , connect.vhost('ip.foobar3000.com', whatsmyip)
-    , connect.vhost('*foobar3000.com', server)
-  ]);
-
-  middleware = middleware.concat([
-      connect.vhost('helloworld3000.com', server)
-    , connect.vhost('whatsmyip.helloworld3000.com', whatsmyip)
-    , connect.vhost('checkip.helloworld3000.com', whatsmyip)
-    , connect.vhost('myip.helloworld3000.com', whatsmyip)
-    , connect.vhost('ip.helloworld3000.com', whatsmyip)
-    , connect.vhost('*helloworld3000.com', server)
+    , connect.vhost('whatsmyip.*', whatsmyip)
+    , connect.vhost('checkip.*', whatsmyip)
+    , connect.vhost('myip.*', whatsmyip)
+    , connect.vhost('ip.*', whatsmyip)
+    , connect.vhost('*helloworld3000', server)
+    , connect.vhost('*foobar3000', server)
+    , connect.vhost('*', server)
   ]);
 
   module.exports = connect.createServer.apply(connect, middleware);
