@@ -6,6 +6,30 @@
   </head>
   <body>
 
+    <div id="router-stuff">
+      Routers:
+      <form id="router-finder">
+        <input name="find-routers" type="submit" value="Find Routers" />
+      </form>
+      <br/>
+      <progress max="0"><span>0</span>/<span>0</span></progress>
+
+      <ul id="router-list">
+        <li><span class="router-address">192.168.1.1</span> <button>Scan</button></li>
+      </ul>
+
+      <ul id="device-list">
+        <li><span class="device-address">192.168.1.1</span> <button>Manage</button></li>
+      </ul>
+    </div>
+
+    <form id="device-finder">
+      Devices:
+      <input name='router-ip' placeholder="Router Address (i.e. 192.168.1.1)" />
+      <br/>
+      <input name="find-devices" type="submit" value="Find Devices" />
+    </form>
+
     <form id="ping" action="#ping">
       Check Port:
       <input name='hostname' placeholder="IP Address (i.e. 192.168.1.1)" />:<input name='port' placeholder="Port (i.e. 80)" />
