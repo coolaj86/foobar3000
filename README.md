@@ -7,14 +7,25 @@ HTTP is supported.
 
 TCP and UDP are in the works.
 
-Installation & Usage
----
+Installation
+===
 
+    git clone git://github.com/coolaj86/foobar3000.git
+    cd foobar3000
+
+    npm install -g spark clean-css ender
     npm install
-    node app.js
+
+    ender build json-storage jQuery Array.prototype.forEachAsync jeesh reqwest ahr2
+    mv ender.* assets/
+    cleancss assets/style.css > assets/style.min.css
+
+    spark app.js
 
 Examples
 ===
+
+More Examples: http://foobar3000.com
 
     HOST=foobar3000.com
 
