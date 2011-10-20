@@ -1,18 +1,22 @@
 <html>
   <head>
+    <link rel='stylesheet' href='/assets/style.min.css' type='text/css' />
     <title>Foobar3000 - the world's most advanced test server</title>
     <script src="assets/ender.js"></script>
   </head>
   <body>
-    <h1>Foobar3000.com - The world's most advanced echo server!</h1>
+    <div id="top">
+      <h1 id='header'>Foobar3000</h1>
+      <h1 id='tagline'>The world's most advanced echo server!</h1>
+    </div>
+
+  <div id="http" class="section">
+    <h2 class='section_head'>HTTP Echo</h2>
     <ul>
         <li>HTTP Echo on ports 80, 8080</li>
         <li>TCP Echo on port 32000</li>
         <li>UDP Echo on port 32000</li>
     </ul>
-
-  <div id="http">
-    <h2>HTTP Echo</h2>
     <p>
       <a href="https://github.com/coolaj86/foobar3000">github.com/coolaj86/foobar3000</a> - A better README than this page.
     </p>
@@ -27,7 +31,7 @@
       <li>Any sessions created will be deleted after 10 minutes of inactivity</li>
     </ul>
     <p>
-      What's your IP? <a href="http://checkip.foobar3000.com">checkip.foobar3000.com</a> - no muss, no fuss, no markup, no `sed`, `awk`, or `.trim()` needed.
+      <h3 class='section_head'>What's your IP?</h2> <a href="http://checkip.foobar3000.com">checkip.foobar3000.com</a> - no muss, no fuss, no markup, no `sed`, `awk`, or `.trim()` needed.
     </p>
     <p>
       <a href="http://helloworld3000.com">helloworld3000.com</a> - An alias of foobar3000.com suitable for testing CORS, XSS, etc. 
@@ -39,9 +43,9 @@
       <li>jQuery</li>
       <li>ahr2</li>
     </ul>
-    Open up your console and play away:
+    <h3 class='section_head'>Open up your console and play away:</h3>
     <pre>
-<code>
+<code class="javascript">
   var jQuery = require('jQuery')  // jQuery 1.6.3
     , $ = require('ender')        // same DOM API as jQuery
     , ajax = require('reqwest')   // same API as jQuery.ajax
@@ -84,10 +88,10 @@
     </pre>
   </div>
 
-  <div id="tcp">
-    <h2>TCP Echo</h2>
+  <div id="tcp" class="section">
+    <h2 class='section_head'>TCP Echo</h2>
 
-    Persistent connection:
+    <h3 class='section_head'>Persistent connection:</h3>
     <pre><code>
       nc -l -p 5000 # GNU netcat
       # nc -l 5000 # BSD netcat
@@ -116,10 +120,10 @@
     </ul>
   </div>
 
-  <div id="udp">
-    <h2>UDP Echo</h2>
+  <div id="udp" class="section">
+    <h2 class='section_head'>UDP Echo</h2>
 
-    Persistent (responds from bound listener):
+    <h3 class='section_head'>Persistent (responds from bound listener):</h3>
     <pre><code>
       nc -u -l -p 5000 # BSD netcat
 
