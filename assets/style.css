@@ -3,6 +3,7 @@
 body {
   font-family: 'Ubuntu', sans-serif;
   background-image: url('/assets/fabric.png');
+  background-attachment: fixed;
 }
 
 #header {
@@ -23,9 +24,18 @@ body {
   margin-left: auto;
   margin-right: auto;
   text-align: center;
-  width: 70%;
-/*  background-color: rgba(238, 234, 225, 1.000); */
+  width: 100%;
   text-shadow: rgba(42, 42, 43, 1.000) 1px 1px 6px;
+}
+
+#footer {
+  text-align: center;
+  text-shadow: rgba(42, 42, 43, 1.000) 3px 3px 4px;
+  font-family: 'Leckerli One', monospace;
+  font-size: 300%;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  color: #8a4390;
 }
 
 .section {
@@ -39,6 +49,10 @@ body {
   color: rgba(213, 220, 195, 1.000);
   box-shadow: 0 4px 10px 10px rgba(52, 53, 55, 1.000);
   opacity: 0.8;
+}
+
+pre {
+  overflow: auto;
 }
 
 h2.section_head {
