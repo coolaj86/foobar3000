@@ -2,7 +2,7 @@
 
 body {
   font-family: 'Ubuntu', sans-serif;
-  background-image: url('/assets/fabric.png');
+  background-image: url('./fabric.png');
   background-attachment: fixed;
 }
 
