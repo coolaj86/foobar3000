@@ -3,9 +3,10 @@ FooBar3000
 
 The world's most advanced Echo Server!
 
-HTTP is supported.
-
-TCP and UDP are in the works.
+  * HTTP
+  * TCP
+  * UDP
+  * checkip
 
 Installation
 ===
