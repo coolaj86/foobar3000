@@ -26,6 +26,13 @@
     <p>
       <h3 class='section_head'>What's your IP?</h2> <a href="http://checkip.foobar3000.com">checkip.foobar3000.com</a> - no muss, no fuss, no markup, no `sed`, `awk`, or `.trim()` needed.
     </p>
+    <p>
+      <h3 class='section_head'>Stuck on Windows?</h3>
+      <ul>
+        <li>Cygwin (curl, netcat, etc): <a href="http://cygwin.com/setup.exe">cygwin.com/setup.exe</a></li>
+        <li>Netcat: <a href="http://joncraton.org/blog/46">joncraton.org/blog/46</a></li>
+      </ul>
+    </p>
   </div>
 
   <div id="http" class="section">
@@ -105,9 +112,13 @@
     <h2 class='section_head'>TCP Echo</h2>
 
     <h3 class='section_head'>Persistent connection:</h3>
+
+    <p>Open port 5000 on your computer in one terminal and connect to foobar3000 on port 32000 in another.</p>
+    <p>Text will be echoed back as-is. JSON will be interpretted, if possible.</p>
+
     <pre><code>
-      nc -l -p 5000 # GNU netcat
-      # nc -l 5000 # BSD netcat
+      nc -l -p 5000 # GNU (Linux) netcat
+      # nc -l 5000 # BSD (OS X) netcat
 
       nc foobar3000.com 32000
       Hey you!
@@ -137,8 +148,13 @@
     <h2 class='section_head'>UDP Echo</h2>
 
     <h3 class='section_head'>Persistent (responds from bound listener):</h3>
+
+    <p>Open port 5000 on your computer in one terminal and connect to foobar3000 on port 32000 in another.</p>
+    <p>Text will be echoed back as-is. JSON will be interpretted, if possible.</p>
+
     <pre><code>
-      nc -u -l -p 5000 # BSD netcat
+      nc -u -l -p 5000 # GNU (Linux) netcat
+      # nc -u -l 5000 # BSD (OS X) netcat
 
       nc -u foobar3000.com 32000
       Hey you!
