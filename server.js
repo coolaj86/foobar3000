@@ -186,6 +186,16 @@
     resHeaders = params.headers || [];
     resHeaders = Array.isArray(resHeaders) ? resHeaders : [resHeaders];
     resHeaders.forEach(setHeader);
+    if (params.cors) {
+      [
+          "Access-Control-Allow-Origin: *"
+        , "Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS"
+        , "Access-Control-Allow-Headers: Content-Type, Accept"
+      ].forEach(setHeader);
+    }
+    if (params.contentType) {
+      setHeader('Content-Type: ' + params.contentType);
+    }
 
 
     //

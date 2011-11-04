@@ -10,12 +10,13 @@
   },
   "main": "app",
   "engines": {
-    "node": ">= 0.4.11"
+    "node": ">= 0.4.12"
   },
   "dependencies": {
     "btoa": ">= 1.0.0",
     "nowww": ">= 1.0.0",
     "bufferjs": ">= 0.0.0",
+    "connect-cors": ">= 0.5.0",
     "connect": ">= 0.0.0"
   },
   "devDependencies": {}
