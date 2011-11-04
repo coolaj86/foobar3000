@@ -36,79 +36,6 @@
     </p>
   </div>
 
-  <div id="http" class="section">
-    <h2 class='section_head'>HTTP Echo</h2>
-    <ul>
-      <li>`GET /` with no parameters returns this page</li>
-      <li>`[VERB] /echo?foo=bar` will echo the parameters you have given</li>
-      <li>`GET /echo?headers=X-Test-Header%3A%20Hello%2FWorld` replies to the request with the additional header `X-Test-Header: Hello World`</li>
-      <li>`GET /echo?body=Hello%20World%0A` replies to the request with the body `Hello World\n`</li>
-      <li>`POST /meta?session=same-token&pathname=%2Ffoobar&body=Hello%20Foo%0A` creates the resource `/foobar` for the session `same-token` with whatever headers and body specified</li>
-      <li>`GET /foobar?session=same-token` response with the resource just created (or an echo if there was none)</li>
-      <li>`GET /checkip` returns your IP Address as `text/plain`, no html, no spaces, no need to `.trim()`</li>
-      <li>Any sessions created will be deleted after 10 minutes of inactivity</li>
-    </ul>
-    For your prototyping pleasure, Ender.JS is loaded on this page with the following modules:
-    <ul>
-      <li>jeesh</li>
-      <li>reqwest</li>
-      <li>jQuery</li>
-      <li>ahr2</li>
-    </ul>
-    <h3 class='section_head'>Open up your console and play away:</h3>
-    <pre>
-<code class="javascript">
-  var jQuery = require('jQuery')  // jQuery 1.6.3
-    , $ = require('ender')        // same DOM API as jQuery
-    , ajax = require('reqwest')   // same API as jQuery.ajax
-    , request = require('ahr2')   // similar API to Node.JS' `request`, supports XHR2
-    ;
-
-  request('/echo').when(function (err, ahr, data) {
-    console.log(arguments);
-  });
-
-
-  // Use foobar3000.com to create a CORS resource
-  // (attached to session)
-  function createCorsResource() {
-    request.post('/meta', null, {
-        session: "make-up-your-own-key"
-      , pathname: "/hello-cors"
-      , headers: [
-            "Access-Control-Allow-Origin: *"
-          , "Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS"
-          , "Access-Control-Allow-Headers: Content-Type, Accept"
-        ]
-      , body: "Hello CORS World!"
-    }, { headers: { "content-type": "application/json"} }).when(function (err, ahr, data) {
-      console.log(arguments);
-      getCorsResource();
-    });
-  }
-
-  // Access the aforementioned resource from helloworld3000.com
-  // (must use same session key)
-  function getCorsResource() {
-    request.get('http://helloworld3000.com/hello-cors?session=make-up-your-own-key').when(function (err, ahr, data) {
-      console.log(arguments);
-    });
-  }
-
-  createCorsResource();
-</code>
-    </pre>
-
-    <h3 class='section_head'>Or play from another browser page:</h3>
-    <pre>
-<code class="javascript">
-  var script = document.createElement('script');
-  script.src = 'http://foobar3000.com/assets/ender.js';
-  script = document.body.appendChild(script);
-</code>
-    </pre>
-  </div>
-
   <div id="tcp" class="section">
     <h2 class='section_head'>TCP Echo</h2>
 
@@ -178,6 +105,221 @@
       </li>
     </ul>
   </div>
+
+  <div id="http" class="section">
+    <h2 class='section_head'>HTTP Echo</h2>
+    <ul>
+      <li>
+        <h3 class='section_head'>Resources</h3>
+        <ul>
+          <li>
+            `/echo` - for echoing back responses
+          </li>
+          <li>
+            `/meta` - for creating resources
+          </li>
+          <li>
+            `/checkip` - to check ip :-D
+          </li>
+        </ul>
+      </li>
+      <li>
+        <h3 class='section_head'>Parameters (either as GET query params or POST body</h3>
+        <ul>
+          <li>
+            `headers` - send these headers as part of the response - Array or String in the format of `["X-My-Header: x-my-value"]`
+          </li>
+          <li>
+            `defaultHeaders` - use with `session` to use these headers when other headers aren't specified
+          </li>
+          <li>
+            `body` - data to use as the response body for a GET request
+          </li>
+          <li>
+            `rawBody` - if `true`, send the POST body instead of echo-ing parameters
+          </li>
+          <li>
+            `raw` - send this as the response via TCP (no http headers)
+            <br/>(good for testing how a client handles malformed responses)
+          </li>
+          <li>
+            `session` - for use with `/meta` and or `defaultHeaders` to store resources for this session in memory
+          </li>
+          <li>
+            `status` - set the response status code
+          </li>
+        </ul>
+      </li>
+      <li>
+        <h3 class='section_head'>This Page</h3>
+        `GET /`
+        <br/>with no parameters
+      </li>
+      <li>
+        <h3 class='section_head'>Echo GET/POST/PUT/etc parameters as a JSON body</h3>
+        `[VERB] /echo?foo=bar`
+        <br/>will echo the parameters you have given
+      </li>
+      <li>
+        <h3 class='section_head'>Set this repsonse's headers</h3>
+        `GET /echo?headers=X-Test-Header%3A%20Hello%2FWorld`
+        <br/>replies to the request with the additional header `X-Test-Header: Hello World`
+      </li>
+      <li>
+        <h3 class='section_head'>Set the response's body</h3>
+        `GET /echo?body=Hello%20World%0A`
+        <br/>replies to the request with the body `Hello World\n`
+      </li>
+      <li>
+        <h3 class='section_head'>Set the response's tcp stream (headers + body)</h3>
+        `POST /echo?raw=true`
+        <br/>
+        `HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 12\r\nConnection: keep-alive\r\n\r\nHello World\n`
+<pre><code>
+Text:
+
+    curl -v "http://${HOST}" \
+      -H 'Content-Type: application/json' \
+      -d '{
+              "raw": "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 12\r\nConnection: keep-alive\r\n\r\nHello World\n"
+          }'
+
+Binary:
+
+    curl -v "http://${HOST}/?rawResponse=true" \
+      -H 'Content-Type: application/octet-stream' \
+      -d @hello.http.bin
+</code></pre>
+      </li>
+      <li>
+        <h3 class='section_head'>Create a temporary text resource with specific body and headers</h3>
+        `GET /meta?session=same-token&pathname=%2Ffoobar&body=Hello%20Foo%0A&headers=Content-Type%3A%20text/plain` creates the resource `/foobar` for the session `same-token` with whatever headers and body specified
+      </li>
+      <li>
+        <h3 class='section_head'>Get the resource you created</h3>
+        `GET /foobar?session=same-token`
+        <br/>response with the resource just created (or an echo if there was none)
+        <br/>NOTE:Any sessions created will be deleted after 10 minutes of inactivity
+      </li>
+      <li>
+        <h3 class='section_head'>Create a temporary binary resource with specific body and headers</h3>
+        `POST /meta?session=same-token&pathname=%2Ffoobar&rawBody=true`
+        <br/>creates the resource `/foobar` for the session `same-token` with whatever headers and body specified
+        <br/>TODO: should respond with a URL
+<pre><code>
+    var buffer
+      ;
+
+    function saveBinary(cb, token, path, headers, buffer) {
+      var xhr2 = new XMLHttpRequest();
+
+      xhr2.open('POST', '/meta'
+        + '?session=' + encodeURIComponent(token) 
+        + '&pathname='+ encodeURIComponent(path)
+        + '&headers=' + encodeURIComponent(JSON.stringify(headers))
+        + '&rawBody=true'
+      , true);
+
+      xhr2.send(buffer);
+
+      xhr2.addEventListener('load', function () {
+        cb(
+            null
+          , JSON.parse(xhr2.responseText)
+          , 'http://foobar3000.com' + path + '?session=' + encodeURIComponent(token)
+        );
+      });
+    }
+
+    function onSaved(err, result, url) {
+      console.log('succeeded');
+      console.log(url);
+    }
+
+    // "Hello ☢☃ (radioactive snowman in utf-8)"
+    buffer = new Uint8Array([
+      72,101,108,108,111,32,226,152,162,226,152,131,32,40,114,97,
+      100,105,111,97,99,116,105,118,101,32,115,110,111,119,109,
+      97,110,32,105,110,32,117,116,102,45,56,41,10
+    ]).buffer;
+
+    saveBinary(
+        onSaved
+      , 'any-token-you-like'
+      , '/any-path-you-like'
+      , ["Content-Type: text/plain; charset=utf-8"]
+      , buffer
+    );
+</code></pre>
+      </li>
+      <li>
+        <h3 class='section_head'>Check your IP Address</h3>
+        `GET /checkip`
+        <br/>returns your IP Address as `text/plain`, no html, no spaces, no need to `.trim()`
+        <br/>TODO: add udp and tcp checkip
+      </li>
+    </ul>
+    For your prototyping pleasure, Ender.JS is loaded on this page with the following modules:
+    <ul>
+      <li>jeesh</li>
+      <li>reqwest</li>
+      <li>jQuery</li>
+      <li>ahr2</li>
+    </ul>
+    <h3 class='section_head'>Open up your console and play away:</h3>
+    <pre>
+<code class="javascript">
+  var jQuery = require('jQuery')  // jQuery 1.6.3
+    , $ = require('ender')        // same DOM API as jQuery
+    , ajax = require('reqwest')   // same API as jQuery.ajax
+    , request = require('ahr2')   // similar API to Node.JS' `request`, supports XHR2
+    ;
+
+  request('/echo').when(function (err, ahr, data) {
+    console.log(arguments);
+  });
+
+
+  // Use foobar3000.com to create a CORS resource
+  // (attached to session)
+  function createCorsResource() {
+    request.post('/meta', null, {
+        session: "make-up-your-own-key"
+      , pathname: "/hello-cors"
+      , headers: [
+            "Access-Control-Allow-Origin: *"
+          , "Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS"
+          , "Access-Control-Allow-Headers: Content-Type, Accept"
+        ]
+      , body: "Hello CORS World!"
+    }, { headers: { "content-type": "application/json"} }).when(function (err, ahr, data) {
+      console.log(arguments);
+      getCorsResource();
+    });
+  }
+
+  // Access the aforementioned resource from helloworld3000.com
+  // (must use same session key)
+  function getCorsResource() {
+    request.get('http://helloworld3000.com/hello-cors?session=make-up-your-own-key').when(function (err, ahr, data) {
+      console.log(arguments);
+    });
+  }
+
+  createCorsResource();
+</code>
+    </pre>
+
+    <h3 class='section_head'>Or play from another browser page:</h3>
+    <pre>
+<code class="javascript">
+  var script = document.createElement('script');
+  script.src = 'http://foobar3000.com/assets/ender.js';
+  script = document.body.appendChild(script);
+</code>
+    </pre>
+  </div>
+
   <div id="footer">
     For all your echoing needs!
   </div>
