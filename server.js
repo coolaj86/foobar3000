@@ -129,7 +129,7 @@
 
     // If the user wants to post a resource to get later
     // TODO test against pathname instead?
-    if (params.pathname && /^\/meta\/?(\?.*)?$/.exec(req.url)) {
+    if (params.pathname && (/^\/meta\/?(\?.*)?$/.exec(req.url) || -1 !== req.subdomains.indexOf('meta')) ) {
       res.setHeader('content-type', 'application/json');
 
       if (/GET|DELETE/.exec(req.method)) {
@@ -189,7 +189,7 @@
     resHeaders = params.headers || [];
     resHeaders = Array.isArray(resHeaders) ? resHeaders : [resHeaders];
     resHeaders.forEach(setHeader);
-    if (params.cors) {
+    if (params.cors || /^\/cors\/?(\?.*)?$/.exec(req.url) || -1 !== req.subdomains.indexOf('cors')) {
       [
           "Access-Control-Allow-Origin: *"
         , "Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS"
@@ -291,6 +291,8 @@
     , connect.vhost('checkip.*', whatsmyip)
     , connect.vhost('myip.*', whatsmyip)
     , connect.vhost('ip.*', whatsmyip)
+    , connect.vhost('meta.*', server)
+    , connect.vhost('cors.*', server)
     , connect.vhost('*helloworld3000.*', server)
     , connect.vhost('*foobar3000.*', server)
     , connect.vhost('*', server)
