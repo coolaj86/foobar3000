@@ -50,8 +50,6 @@
       , resBody
       ;
 
-    console.log('Echo Echo Echo...');
-
     if (/GET/i.exec(req.method) && '/' === req.url && !req.body || /assets/.exec(req.url)) {
       return next();
     }
@@ -67,7 +65,6 @@
     // Parse QUERY and BODY
     //
     urlObj = url.parse(req.url, true, true);
-    console.log(urlObj);
     delete urlObj.search;
     urlObj.httpVersion = req.httpVersion;
     urlObj.method = req.method;
@@ -78,10 +75,13 @@
     urlObj.remotePort = req.socket.remotePort;
 
     params = (!(req.body instanceof Buffer) && 'object' === typeof req.body && req.body) || urlObj.query;
+
     if (params.rawResponse) {
       params.raw = req.body;
     } else if (params.rawBody) {
       params.body = req.body || urlObj.body;
+    } else if (req.body) {
+      urlObj.body = req.body;
     }
 
     /*
@@ -90,11 +90,14 @@
     console.log(req.client === req.socket); // true
     */
 
-    // how can we determine these?
-    urlObj.protocol = req.protocol || 'http:';
+    // if the socket is encrypted, this is probably https
+    urlObj.protocol = (req.connection.encrypted ? 'https:' : 'http:')
     urlObj.host = req.headers.host;
     urlObj.hostname = urlObj.host.split(':')[0];
     urlObj.port = urlObj.host.split(':')[1];
+    if (!urlObj.port) {
+      delete urlObj.port;
+    }
 
     urlObj.href = url.format(urlObj);
 
@@ -217,10 +220,10 @@
       if (!res.getHeader('content-type')) {
         res.setHeader('content-type', 'application/json');
       }
-      console.log('!rawBody', urlObj);
+      // XXX true end
       res.end(JSON.stringify(urlObj, null, '  '));
     } else {
-      console.log('rawBody');
+      // XXX true end
       res.end(resBody);
     }
   }
@@ -230,7 +233,6 @@
       ;
 
     if (req.body || !(req.headers['transfer-encoding'] || req.headers['content-length'])) {
-      console.log('No Body');
       return next();
     }
 
@@ -240,15 +242,13 @@
 
     req.on('end', function () {
       req.body = Buffer.concat(data);
-      console.log('Has Body');
       next();
     });
   }
 
   server = connect.createServer(
       function (req, res, next) {
-        console.log('Echo Blah');
-        console.log(req.subdomains);
+        //console.log(req.subdomains);
         next();
       }
     , connect.favicon()
@@ -260,7 +260,6 @@
 
   echoServer = connect.createServer(
       function (req, res, next) {
-        console.log('Echo Server');
         next();
       }
     , connect.favicon()
@@ -300,8 +299,9 @@
   module.exports = connect.createServer.apply(connect, middleware);
 
   try {
-    connect.createServer.apply(connect, middleware).listen(8080);
+    connect.createServer.apply(connect, middleware).listen(config.port);
+    console.info('[INFO] also running on port ' + config.port);
   } catch(e) {
-    console.warn('[WARN] probably already bound on 8080');
+    console.warn('[WARN] probably already bound on ' + config.port);
   }
 }());
