@@ -1,0 +1,25 @@
+{
+  "author": "AJ ONeal <coolaj86@gmail.com> (http://coolaj86.info/)",
+  "name": "nq",
+  "description": "A net proxy from http, tcp, or udp, to http",
+  "version": "0.1.0",
+  "homepage": "https://github.com/coolaj86/nq",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/coolaj86/nq.git"
+  },
+  "main": "lib/index",
+  "scripts": {
+    "test": "node test"
+  },
+  "engines": {
+    "node": ">=0.2.0"
+  },
+  "dependencies": {
+      "steve": "0.5.x"
+    , "node-uuid": "1.x"
+    , "bufferjs": "1.x"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {}
+}
