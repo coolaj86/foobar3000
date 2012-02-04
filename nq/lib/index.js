@@ -60,9 +60,8 @@
     });
   }
 
-  listeners.http = function (cb, silo) {
+  listeners.http = function (cb, silo, port) {
     var server
-      , port = silo.targetPort
       ;
 
     function abstractHttpAndStore(req, res) {
@@ -91,17 +90,27 @@
         , abstractHttpAndStore
       )
     }
+    function getAddressAndRevel() {
+      var address = server.address()
+        ;
+
+      port = address.port;
+      silo.revelInBirth(null, address);
+    }
     server = createServer();
     server.on('error', silo.revelInBirth);
-    server.listen(silo.targetPort, silo.revelInBirth);
+    if (port) {
+      server.listen(port, getAddressAndRevel);
+    } else {
+      server.listen(getAddressAndRevel);
+    }
 
     silo.server = server;
   };
 
 
-  listeners.tcp = function (cb, silo) {
+  listeners.tcp = function (cb, silo, port) {
     var server
-      , port = silo.targetPort
       ;
 
     function acceptClients(client) {
@@ -116,8 +125,8 @@
 
         // send the request back empty
         // TODO mention port
-        client.end("server closed successfully and port is available for use");
-        console.log("server closed successfully and port is available for use");
+        client.end("server closed successfully and port " + port + " is available for use");
+        console.log("server closed successfully and port " + port + " is available for use");
       }
 
       silo.keepAlive();
@@ -135,9 +144,21 @@
       });
     }
 
+    function getAddressAndRevel() {
+      // TCP
+      var address = server.address()
+        ;
+        
+      port = address.port;
+      silo.revelInBirth(null, address);
+    }
     server = net.createServer(acceptClients);
     server.on('error', silo.revelInBirth);
-    server.listen(silo.targetPort, silo.revelInBirth);
+    if (port) {
+      server.listen(port, getAddressAndRevel);
+    } else {
+      server.listen(getAddressAndRevel);
+    }
 
     silo.server = server;
   };
@@ -162,7 +183,7 @@
 
     // negating > is better than < because it catches NaN as well
     port = parseInt(req.body.port, 10);
-    if (!(port > 1023)) {
+    if (undefined !== req.body.port && !(port > 1023)) {
       res.error("The port must be a decimal integer >= 1024. The lower \"well known\" ports are reserved for system use. Octal and hex are not supported");
       res.json();
       return;
@@ -170,9 +191,6 @@
 
     // HTTP: -> http, Tcp -> tcp
     protocol = String(req.body.protocol).toLowerCase().replace(/:$/, '');
-    
-    req.body.protocol = protocol + ':';
-    req.body.port = port;
 
     function respond(err, params) {
       if (err) {
@@ -191,13 +209,11 @@
     var uuid = UUID.v1()
       , silo = sdb[uuid] = {}
       , responseMeta = {
-            "protocol": protocol
-          , "port": port
+            "protocol": protocol + ':'
         }
       , handler
       ;
 
-    silo.targetPort = port;
     silo.uuid = uuid;
     silo.storageLength = 0;
     silo.requestIndex = 0;
@@ -221,12 +237,13 @@
       silo.requestIndex += 1;
     };
 
-    silo.revelInBirth = function (err) {
+    silo.revelInBirth = function (err, address) {
       var uuid = silo.uuid
         ;
 
       if (!err) {
         silo.keepAlive();
+        responseMeta.port = address.port;
         responseMeta.resource = uuid;
       } else {
         silo.closeServer();
@@ -252,8 +269,7 @@
         return;
       }
 
-      // TODO targetPort
-      console.info('closing server on ' + silo.targetPort);
+      console.info('closing server on ' + port);
 
       if (onServerClose) {
         silo.server.on('close', onServerClose);
@@ -293,9 +309,10 @@
     }
 
     handler(function (err, params) {
+      // TODO this is dead code
       params.resource = err ? undefined : silo.uuid;
       cb(err, params);
-    }, silo);
+    }, silo, port);
   }
 
   function hasGreaterTimestamp(a, b) {

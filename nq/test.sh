@@ -6,8 +6,6 @@ HOSTNAME="http://localhost"
 PORT=8877
 HOST="${HOSTNAME}:${PORT}"
 TARGET_PORT=7799
-TARGET_HOST="${HOSTNAME}:${TARGET_PORT}"
-
 
 echo ""
 echo START NEW SERVER
@@ -16,11 +14,16 @@ RESP=`curl -s "${HOST}/nq/new" \
   -H 'Content-Type: application/json' \
   -d '{
           "protocol": "http"
-        , "port": 7799
       }'`
+
+        #, "port": 7799
 
 echo ${RESP} | json-prettify
 UUID=`echo ${RESP} | json-prettify | grep resource | cut -d'"' -f 4`
+TARGET_PORT=`echo ${RESP} | json-prettify | grep port | cut -d':' -f 2`
+# trim whitespace
+TARGET_PORT=`echo ${TARGET_PORT}`
+TARGET_HOST="${HOSTNAME}:${TARGET_PORT}"
 
 # can see empty metadata
 echo ""
