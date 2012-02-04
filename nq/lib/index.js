@@ -243,7 +243,7 @@
 
       if (!err) {
         silo.keepAlive();
-        responseMeta.port = address.port;
+        responseMeta.port = port = address.port;
         responseMeta.resource = uuid;
       } else {
         silo.closeServer();
