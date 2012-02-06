@@ -124,7 +124,6 @@
         });
 
         // The response cannot actually be sent, btw
-        console.log("tcp connection closed successfully");
         client.end("tcp connection closed successfully");
       }
 
@@ -291,7 +290,7 @@
       if (!payload) {
         return;
       }
-      silo.storageLength -= payload.length;
+      silo.storageLength -= payload.data.length;
 
       delete silo[index];
     };
@@ -315,7 +314,7 @@
   }
 
   function hasGreaterTimestamp(a, b) {
-    return (a.timestamp > b.timestamp) ? 1 : -1;
+    return (a.timestamp < b.timestamp) ? 1 : -1;
   }
 
   function isNumber(x) {
@@ -389,7 +388,7 @@
     }
 
     res.end(payload.data);
-    silo.remove([req.params.index]);
+    silo.remove(req.params.index);
   }
 
   function router(app) {
