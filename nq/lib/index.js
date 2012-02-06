@@ -123,10 +123,9 @@
           , remotePort: client.remotePort
         });
 
-        // send the request back empty
-        // TODO mention port
-        client.end("server closed successfully and port " + port + " is available for use");
-        console.log("server closed successfully and port " + port + " is available for use");
+        // The response cannot actually be sent, btw
+        console.log("tcp connection closed successfully");
+        client.end("tcp connection closed successfully");
       }
 
       silo.keepAlive();
@@ -316,7 +315,7 @@
   }
 
   function hasGreaterTimestamp(a, b) {
-    return (a.meta.timestamp > b.meta.timestamp) ? 1 : -1;
+    return (a.timestamp > b.timestamp) ? 1 : -1;
   }
 
   function isNumber(x) {
@@ -337,9 +336,8 @@
     // (perhaps I'll switch to a uuid in the future)
 
     silo = sdb[uuid];
-
     if (!silo) {
-      res.error("No listener exists for " + silo.uuid + ". Remember that unused listeners are deleted after " + LISTENER_STALETIME + "ms");
+      res.error("No listener exists for " + uuid + ". Remember that unused listeners are deleted after " + LISTENER_STALETIME + "ms");
       res.json();
       return;
     }
@@ -347,11 +345,11 @@
     metas = [];
     Object.keys(silo)
       .filter(isNumber)
-      .sort(hasGreaterTimestamp)
       .forEach(function (index) {
         metas.push(silo[index].meta);
       });
     
+    metas = metas.sort(hasGreaterTimestamp);
     res.json(metas);
   }
 
