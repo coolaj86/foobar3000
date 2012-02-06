@@ -371,18 +371,20 @@
   function get(req, res, next) {
     var silo
       , payload
+      , resource = req.params.resource
+      , id = req.params.id
       ;
 
-    silo = sdb[req.params.resource];
+    silo = sdb[resource];
     if (!silo) {
-      res.error("No listener exists for " + silo.uuid + ". Remember that unused listeners are deleted after " + LISTENER_STALETIME + "ms");
+      res.error("No listener exists for " + resource + ". Remember that unused listeners are deleted after " + LISTENER_STALETIME + "ms");
       res.json();
       return;
     }
 
-    payload = silo[req.params.index];
+    payload = silo[id];
     if (!payload) {
-      res.error("No payload exists at index " + silo.uuid + ".");
+      res.error("No payload exists at index " + id + ".");
       res.json();
       return;
     }
