@@ -372,7 +372,7 @@
     var silo
       , payload
       , resource = req.params.resource
-      , id = req.params.id
+      , id = req.params.index
       ;
 
     silo = sdb[resource];
