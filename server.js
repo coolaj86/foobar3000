@@ -14,6 +14,7 @@
     , connect = require('connect')
     , btoa = require('btoa')
     , url = require('url')
+    , nqServer = require('./nq/lib').create()
     , server
     , echoServer
     , whatsmyip
@@ -293,6 +294,7 @@
     , connect.vhost('ip.*', whatsmyip)
     , connect.vhost('meta.*', server)
     , connect.vhost('cors.*', server)
+    , connect.vhost('nq.*', nqServer)
     , connect.vhost('*helloworld3000.*', server)
     , connect.vhost('*foobar3000.*', server)
     , connect.vhost('*', server)

@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   
-  var server = require('./lib/index')
+  var server = require('./lib/index').create()
     , connect = require('steve')
     , port = 8877
     , bigServer

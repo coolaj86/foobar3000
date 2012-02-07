@@ -8,402 +8,411 @@
     , net = require('net')
     , udp = require('dgram')
     , UUID = require('node-uuid')
-    , mainServer
-    , DB = {}
-    , listeners = {}
-    , sdb = {}
-    , servers = {}
-    , UPLOAD_BYTE_LIMIT = 1 * 1024 * 1024
-    , TOTAL_UPLOAD_BYTE_LIMIT = 10 * 1024 * 1024
-    , LISTENER_STALETIME = 1 * 60 * 1000
-    //, LISTENER_STALETIME = 10 * 60 * 1000
-    ;
 
-  DB.create = function () {
-    var db = {};
-
-    return {
-        "get": function (key) {
-          return db[key];
-        }
-      , "set": function (key, val) {
-          db[key] = val;
-        }
-      , "delete": function (key) {
-          delete db[key];
-        }
-    }
-  };
-
-  function getBodyData(req, res, next) {
-    var chunks = []
-      , size = UPLOAD_BYTE_LIMIT
+  function create() {
+    var mainServer
+      , DB = {}
+      , listeners = {}
+      , sdb = {}
+      , servers = {}
+      , UPLOAD_BYTE_LIMIT = 1 * 1024 * 1024
+      , TOTAL_UPLOAD_BYTE_LIMIT = 10 * 1024 * 1024
+      , LISTENER_STALETIME = 1 * 60 * 1000
+      //, LISTENER_STALETIME = 10 * 60 * 1000
       ;
 
-    // TODO handle errors?
-    req.on('data', function (chunk) {
-      size -= chunk.length;
+    DB.create = function () {
+      var db = {};
 
-      if (!(size >= 0)) {
-        req.pause();
-        res.error("Exceeded upload limit of " + String(UPLOAD_BYTE_LIMIT) + " bytes");
+      return {
+          "get": function (key) {
+            return db[key];
+          }
+        , "set": function (key, val) {
+            db[key] = val;
+          }
+        , "delete": function (key) {
+            delete db[key];
+          }
+      }
+    };
+
+    function getBodyData(req, res, next) {
+      var chunks = []
+        , size = UPLOAD_BYTE_LIMIT
+        ;
+
+      // TODO handle errors?
+      req.on('data', function (chunk) {
+        size -= chunk.length;
+
+        if (!(size >= 0)) {
+          req.pause();
+          res.error("Exceeded upload limit of " + String(UPLOAD_BYTE_LIMIT) + " bytes");
+          res.json();
+          return;
+        }
+
+        chunks.push(chunk);
+      });
+
+      req.on('end', function (chunk) {
+        req.body = Buffer.concat(chunks);
+        next();
+      });
+    }
+
+    listeners.http = function (cb, silo, port) {
+      var server
+        ;
+
+      function abstractHttpAndStore(req, res) {
+        var data = req.body || new Buffer(0)
+          ;
+
+        silo.add(data, {
+            headers: req.headers
+          , method: req.method
+          , url: req.url
+          , remoteAddress: req.socket.remoteAddress
+          , remotePort: req.socket.remotePort
+        });
+
+        // send the request back empty
+        res.json("got data");
+      }
+
+      function createServer() {
+        return connect.createServer(
+            function (req, res, next) {
+              silo.keepAlive();
+              next();
+            }
+          , getBodyData
+          , abstractHttpAndStore
+        )
+      }
+      function getAddressAndRevel() {
+        var address = server.address()
+          ;
+
+        port = address.port;
+        silo.revelInBirth(null, address);
+      }
+      server = createServer();
+      server.on('error', silo.revelInBirth);
+      if (port) {
+        server.listen(port, getAddressAndRevel);
+      } else {
+        server.listen(getAddressAndRevel);
+      }
+
+      silo.server = server;
+    };
+
+
+    listeners.tcp = function (cb, silo, port) {
+      var server
+        ;
+
+      function acceptClients(client) {
+        var chunks = []
+          ;
+
+        function abstractTcpAndStore(data) {
+          silo.add(data, {
+              remoteAddress: client.remoteAddress
+            , remotePort: client.remotePort
+          });
+
+          // The response cannot actually be sent, btw
+          console.log("tcp connection closed successfully");
+          client.end("tcp connection closed successfully");
+        }
+
+        silo.keepAlive();
+        
+        client.on('error', function (err) {
+          client.destroy();
+        });
+
+        client.on('data', function (chunk) {
+          chunks.push(chunk);
+        });
+
+        client.on('end', function () {
+          abstractTcpAndStore(Buffer.concat(chunks));
+        });
+      }
+
+      function getAddressAndRevel() {
+        // TCP
+        var address = server.address()
+          ;
+          
+        port = address.port;
+        silo.revelInBirth(null, address);
+      }
+      server = net.createServer(acceptClients);
+      server.on('error', silo.revelInBirth);
+      if (port) {
+        server.listen(port, getAddressAndRevel);
+      } else {
+        server.listen(getAddressAndRevel);
+      }
+
+      silo.server = server;
+    };
+
+    function create(req, res, next) {
+      var handler
+        , protocol
+        , port
+        ;
+
+      if (!/application\/json/i.exec(req.headers['content-type'])) {
+        res.error("Content-Type (http header) is not set to 'application/json'");
         res.json();
         return;
       }
 
-      chunks.push(chunk);
-    });
-
-    req.on('end', function (chunk) {
-      req.body = Buffer.concat(chunks);
-      next();
-    });
-  }
-
-  listeners.http = function (cb, silo, port) {
-    var server
-      ;
-
-    function abstractHttpAndStore(req, res) {
-      var data = req.body || new Buffer(0)
-        ;
-
-      silo.add(data, {
-          headers: req.headers
-        , method: req.method
-        , url: req.url
-        , remoteAddress: req.socket.remoteAddress
-        , remotePort: req.socket.remotePort
-      });
-
-      // send the request back empty
-      res.json("got data");
-    }
-
-    function createServer() {
-      return connect.createServer(
-          function (req, res, next) {
-            silo.keepAlive();
-            next();
-          }
-        , getBodyData
-        , abstractHttpAndStore
-      )
-    }
-    function getAddressAndRevel() {
-      var address = server.address()
-        ;
-
-      port = address.port;
-      silo.revelInBirth(null, address);
-    }
-    server = createServer();
-    server.on('error', silo.revelInBirth);
-    if (port) {
-      server.listen(port, getAddressAndRevel);
-    } else {
-      server.listen(getAddressAndRevel);
-    }
-
-    silo.server = server;
-  };
-
-
-  listeners.tcp = function (cb, silo, port) {
-    var server
-      ;
-
-    function acceptClients(client) {
-      var chunks = []
-        ;
-
-      function abstractTcpAndStore(data) {
-        silo.add(data, {
-            remoteAddress: client.remoteAddress
-          , remotePort: client.remotePort
-        });
-
-        // The response cannot actually be sent, btw
-        console.log("tcp connection closed successfully");
-        client.end("tcp connection closed successfully");
-      }
-
-      silo.keepAlive();
-      
-      client.on('error', function (err) {
-        client.destroy();
-      });
-
-      client.on('data', function (chunk) {
-        chunks.push(chunk);
-      });
-
-      client.on('end', function () {
-        abstractTcpAndStore(Buffer.concat(chunks));
-      });
-    }
-
-    function getAddressAndRevel() {
-      // TCP
-      var address = server.address()
-        ;
-        
-      port = address.port;
-      silo.revelInBirth(null, address);
-    }
-    server = net.createServer(acceptClients);
-    server.on('error', silo.revelInBirth);
-    if (port) {
-      server.listen(port, getAddressAndRevel);
-    } else {
-      server.listen(getAddressAndRevel);
-    }
-
-    silo.server = server;
-  };
-
-  function create(req, res, next) {
-    var handler
-      , protocol
-      , port
-      ;
-
-    if (!/application\/json/i.exec(req.headers['content-type'])) {
-      res.error("Content-Type (http header) is not set to 'application/json'");
-      res.json();
-      return;
-    }
-
-    if (!req.body) {
-      res.error("request body is empty (or an empty string); it should contain JSON");
-      res.json();
-      return;
-    }
-
-    // negating > is better than < because it catches NaN as well
-    port = parseInt(req.body.port, 10);
-    if (undefined !== req.body.port && !(port > 1023)) {
-      res.error("The port must be a decimal integer >= 1024. The lower \"well known\" ports are reserved for system use. Octal and hex are not supported");
-      res.json();
-      return;
-    }
-
-    // HTTP: -> http, Tcp -> tcp
-    protocol = String(req.body.protocol).toLowerCase().replace(/:$/, '');
-
-    function respond(err, params) {
-      if (err) {
-        res.error(err);
-        res.json(params);
+      if (!req.body) {
+        res.error("request body is empty (or an empty string); it should contain JSON");
+        res.json();
         return;
       }
 
-      res.json(params);
-    }
-
-    createSilo(respond, protocol, port);
-  }
-
-  function createSilo(cb, protocol, port) {
-    var uuid = UUID.v1()
-      , silo = sdb[uuid] = {}
-      , responseMeta = {
-            "protocol": protocol + ':'
-        }
-      , handler
-      ;
-
-    silo.uuid = uuid;
-    silo.storageLength = 0;
-    silo.requestIndex = 0;
-    silo.requestIndexHead = 0;
-
-    silo.add = function (data, meta) {
-      silo.storageLength += data.length;
-      while (!(silo.storageLength <= TOTAL_UPLOAD_BYTE_LIMIT)) {
-        silo.remove();
+      // negating > is better than < because it catches NaN as well
+      port = parseInt(req.body.port, 10);
+      if (undefined !== req.body.port && !(port > 1023)) {
+        res.error("The port must be a decimal integer >= 1024. The lower \"well known\" ports are reserved for system use. Octal and hex are not supported");
+        res.json();
+        return;
       }
 
-      meta.id = silo.requestIndex;
-      meta.timestamp = Date.now();
-      meta.length = data.length;
+      // HTTP: -> http, Tcp -> tcp
+      protocol = String(req.body.protocol).toLowerCase().replace(/:$/, '');
 
-      silo[silo.requestIndex] = {
-          data: data
-        , meta: meta
+      function respond(err, params) {
+        if (err) {
+          res.error(err);
+          res.json(params);
+          return;
+        }
+
+        res.json(params);
+      }
+
+      createSilo(respond, protocol, port);
+    }
+
+    function createSilo(cb, protocol, port) {
+      var uuid = UUID.v1()
+        , silo = sdb[uuid] = {}
+        , responseMeta = {
+              "protocol": protocol + ':'
+          }
+        , handler
+        ;
+
+      silo.uuid = uuid;
+      silo.storageLength = 0;
+      silo.requestIndex = 0;
+      silo.requestIndexHead = 0;
+
+      silo.add = function (data, meta) {
+        silo.storageLength += data.length;
+        while (!(silo.storageLength <= TOTAL_UPLOAD_BYTE_LIMIT)) {
+          silo.remove();
+        }
+
+        meta.id = silo.requestIndex;
+        meta.timestamp = Date.now();
+        meta.length = data.length;
+
+        silo[silo.requestIndex] = {
+            data: data
+          , meta: meta
+        };
+
+        silo.requestIndex += 1;
       };
 
-      silo.requestIndex += 1;
-    };
+      silo.revelInBirth = function (err, address) {
+        var uuid = silo.uuid
+          ;
 
-    silo.revelInBirth = function (err, address) {
-      var uuid = silo.uuid
-        ;
-
-      if (!err) {
-        silo.keepAlive();
-        responseMeta.port = port = address.port;
-        responseMeta.resource = uuid;
-      } else {
-        silo.closeServer();
-        uuid = undefined;
-      }
-
-      silo.server.removeListener('error', silo.revelInBirth);
-
-      cb(err, responseMeta);
-    };
-
-    silo.keepAlive = function () {
-      clearTimeout(silo.timeoutToken);
-      silo.timeoutToken = setTimeout(silo.closeServer, LISTENER_STALETIME);
-    }
-
-    silo.closeServer = function (onServerClose) {
-      clearTimeout(silo.timeoutToken);
-      if (!silo.server) {
-        if (onServerClose) {
-          onServerClose("no server exists");
+        if (!err) {
+          silo.keepAlive();
+          responseMeta.port = port = address.port;
+          responseMeta.resource = uuid;
+        } else {
+          silo.closeServer();
+          uuid = undefined;
         }
+
+        silo.server.removeListener('error', silo.revelInBirth);
+
+        cb(err, responseMeta);
+      };
+
+      silo.keepAlive = function () {
+        clearTimeout(silo.timeoutToken);
+        silo.timeoutToken = setTimeout(silo.closeServer, LISTENER_STALETIME);
+      }
+
+      silo.closeServer = function (onServerClose) {
+        clearTimeout(silo.timeoutToken);
+        if (!silo.server) {
+          if (onServerClose) {
+            onServerClose("no server exists");
+          }
+          return;
+        }
+
+        console.info('closing server on ' + port);
+
+        if (onServerClose) {
+          silo.server.on('close', onServerClose);
+        }
+
+        silo.server.close();
+        silo.destroy();
+      }
+
+      silo.remove = function (index) {
+        var payload
+          ;
+
+        if (undefined === index || index === silo.requestIndexHead) {
+          index = silo.requestIndexHead;
+          silo.requestIndexHead += 1;
+        }
+
+        payload = silo[index];
+        if (!payload) {
+          return;
+        }
+        silo.storageLength -= payload.length;
+
+        delete silo[index];
+      };
+
+      silo.destroy = function () {
+        delete sdb[uuid];
+      };
+
+      handler = listeners[protocol];
+
+      if (!handler) {
+        cb("The protocol must be one of \"http:\", \"tcp:\", or \"udp:\". Note that the letters must be lowercase and have a trailing \":\"");
         return;
       }
 
-      console.info('closing server on ' + port);
-
-      if (onServerClose) {
-        silo.server.on('close', onServerClose);
-      }
-
-      silo.server.close();
-      silo.destroy();
+      handler(function (err, params) {
+        // TODO this is dead code
+        params.resource = err ? undefined : silo.uuid;
+        cb(err, params);
+      }, silo, port);
     }
 
-    silo.remove = function (index) {
-      var payload
+    function hasGreaterTimestamp(a, b) {
+      return (a.timestamp > b.timestamp) ? 1 : -1;
+    }
+
+    function isNumber(x) {
+      // this simplistic test only works
+      // for extremely simple, well-known data sets
+      // do not copy this elsewhere
+      return !isNaN(x);
+    }
+
+    function meta(req, res, next) {
+      var uuid = req.params.resource
+        , silo
+        , metas
         ;
 
-      if (undefined === index || index === silo.requestIndexHead) {
-        index = silo.requestIndexHead;
-        silo.requestIndexHead += 1;
-      }
+      // I'm not ready to commit to the idea that 'id'
+      // will always be the same as the array index
+      // (perhaps I'll switch to a uuid in the future)
 
-      payload = silo[index];
-      if (!payload) {
+      silo = sdb[uuid];
+      if (!silo) {
+        res.error("No listener exists for " + uuid + ". Remember that unused listeners are deleted after " + LISTENER_STALETIME + "ms");
+        res.json();
         return;
       }
-      silo.storageLength -= payload.length;
 
-      delete silo[index];
-    };
+      function getMetas() {
+        metas = [];
+        Object.keys(silo)
+          .filter(isNumber)
+          .forEach(function (index) {
+            metas.push(silo[index].meta);
+          });
+        
+        metas = metas.sort(hasGreaterTimestamp);
+        res.json(metas);
+      }
 
-    silo.destroy = function () {
-      delete sdb[uuid];
-    };
-
-    handler = listeners[protocol];
-
-    if (!handler) {
-      cb("The protocol must be one of \"http:\", \"tcp:\", or \"udp:\". Note that the letters must be lowercase and have a trailing \":\"");
-      return;
+      getMetas();
     }
 
-    handler(function (err, params) {
-      // TODO this is dead code
-      params.resource = err ? undefined : silo.uuid;
-      cb(err, params);
-    }, silo, port);
-  }
+    function closeServer(req, res, next) {
+      var silo = sdb[req.params.resource]
+        ;
 
-  function hasGreaterTimestamp(a, b) {
-    return (a.timestamp > b.timestamp) ? 1 : -1;
-  }
+      if (!silo) {
+        res.error("No listener exists for " + silo.uuid + ". Remember that unused listeners are deleted after " + LISTENER_STALETIME + "ms");
+        res.json();
+        return;
+      }
 
-  function isNumber(x) {
-    // this simplistic test only works
-    // for extremely simple, well-known data sets
-    // do not copy this elsewhere
-    return !isNaN(x);
-  }
-
-  function meta(req, res, next) {
-    var uuid = req.params.resource
-      , silo
-      , metas
-      ;
-
-    // I'm not ready to commit to the idea that 'id'
-    // will always be the same as the array index
-    // (perhaps I'll switch to a uuid in the future)
-
-    silo = sdb[uuid];
-    if (!silo) {
-      res.error("No listener exists for " + uuid + ". Remember that unused listeners are deleted after " + LISTENER_STALETIME + "ms");
-      res.json();
-      return;
-    }
-
-    metas = [];
-    Object.keys(silo)
-      .filter(isNumber)
-      .forEach(function (index) {
-        metas.push(silo[index].meta);
+      silo.closeServer(function () {
+        // TODO tell which port
+        res.json("server closed successfully and port is available for use");
       });
-    
-    metas = metas.sort(hasGreaterTimestamp);
-    res.json(metas);
-  }
-
-  function closeServer(req, res, next) {
-    var silo = sdb[req.params.resource]
-      ;
-
-    if (!silo) {
-      res.error("No listener exists for " + silo.uuid + ". Remember that unused listeners are deleted after " + LISTENER_STALETIME + "ms");
-      res.json();
-      return;
     }
 
-    silo.closeServer(function () {
-      // TODO tell which port
-      res.json("server closed successfully and port is available for use");
-    });
-  }
+    function get(req, res, next) {
+      var silo
+        , payload
+        ;
 
-  function get(req, res, next) {
-    var silo
-      , payload
-      ;
+      silo = sdb[req.params.resource];
+      if (!silo) {
+        res.error("No listener exists for " + silo.uuid + ". Remember that unused listeners are deleted after " + LISTENER_STALETIME + "ms");
+        res.json();
+        return;
+      }
 
-    silo = sdb[req.params.resource];
-    if (!silo) {
-      res.error("No listener exists for " + silo.uuid + ". Remember that unused listeners are deleted after " + LISTENER_STALETIME + "ms");
-      res.json();
-      return;
+      payload = silo[req.params.index];
+      if (!payload) {
+        res.error("No payload exists at index " + silo.uuid + ".");
+        res.json();
+        return;
+      }
+
+      res.end(payload.data);
+      silo.remove([req.params.index]);
     }
 
-    payload = silo[req.params.index];
-    if (!payload) {
-      res.error("No payload exists at index " + silo.uuid + ".");
-      res.json();
-      return;
+    function router(app) {
+      app.post('/new', create);
+      app.put('/new', create);
+      app.get('/:resource', meta);
+      app.delete('/:resource', closeServer);
+      app.delete('/:resource/:index', get);
     }
 
-    res.end(payload.data);
-    silo.remove([req.params.index]);
+    mainServer = connect.createServer(
+        connect.bodyParser()
+      , connect.router(router)
+    );
+
+    return mainServer;
   }
 
-  function router(app) {
-    app.post('/new', create);
-    app.put('/new', create);
-    app.get('/:resource', meta);
-    app.delete('/:resource', closeServer);
-    app.delete('/:resource/:index', get);
-  }
-
-  mainServer = connect.createServer(
-      connect.bodyParser()
-    , connect.router(router)
-  );
-
-  module.exports = mainServer;
+  module.exports.create = create;
 }());
