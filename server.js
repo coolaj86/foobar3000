@@ -301,7 +301,7 @@
     , connect.vhost('*', fbServer)
   ];
 
-  module.exports = server = connect.createServer(); //.apply(connect, middleware);
+  module.exports = server = connect.createServer.apply(connect, middleware);
 
   function serverListening() {
     console.log('Server running on ' + server.address().address + ':' + server.address().port);
