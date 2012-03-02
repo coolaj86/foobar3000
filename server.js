@@ -15,8 +15,9 @@
     , btoa = require('btoa')
     , url = require('url')
     , nqServer = require('./nq/lib').create()
-    , server
+    , fbServer
     , echoServer
+    , server
     , whatsmyip
     , sessions = {}
     ;
@@ -247,7 +248,7 @@
     });
   }
 
-  server = connect.createServer(
+  fbServer = connect.createServer(
       function (req, res, next) {
         //console.log(req.subdomains);
         next();
@@ -270,7 +271,7 @@
   );
 
   /*
-    server.listen(config.port);
+    fbServer.listen(config.port);
     console.log('Started on ' + config.port || 80);
   */
 
@@ -292,20 +293,27 @@
     , connect.vhost('checkip.*', whatsmyip)
     , connect.vhost('myip.*', whatsmyip)
     , connect.vhost('ip.*', whatsmyip)
-    , connect.vhost('meta.*', server)
-    , connect.vhost('cors.*', server)
+    , connect.vhost('meta.*', fbServer)
+    , connect.vhost('cors.*', fbServer)
     , connect.vhost('nq.*', nqServer)
-    , connect.vhost('*helloworld3000.*', server)
-    , connect.vhost('*foobar3000.*', server)
-    , connect.vhost('*', server)
+    , connect.vhost('*helloworld3000.*', fbServer)
+    , connect.vhost('*foobar3000.*', fbServer)
+    , connect.vhost('*', fbServer)
   ];
 
-  module.exports = connect.createServer.apply(connect, middleware);
+  module.exports = server = connect.createServer(); //.apply(connect, middleware);
 
-  try {
-    connect.createServer.apply(connect, middleware).listen(config.port);
-    console.info('[INFO] also running on port ' + config.port);
-  } catch(e) {
-    console.warn('[WARN] probably already bound on ' + config.port);
+  function serverListening() {
+    console.log('Server running at ' + server.address().address + ':' + server.address().port);
+  }
+
+  if (require.main !== module) {
+    return;
+  }
+
+  if (config.port) {
+    server.listen(config.port, serverListening);
+  } else {
+    server.listen(serverListening);
   }
 }());

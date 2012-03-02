@@ -13,11 +13,11 @@
     "node": ">= 0.4.12"
   },
   "dependencies": {
-    "btoa": ">= 1.0.0",
-    "nowww": ">= 1.0.0",
+    "btoa": "1.x",
+    "nowww": "1.x",
     "bufferjs": ">= 0.0.0",
     "connect-cors": ">= 0.5.0",
-    "connect": ">= 0.0.0"
+    "connect": "1.x"
   },
   "devDependencies": {}
 }
