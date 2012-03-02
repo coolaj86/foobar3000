@@ -304,7 +304,7 @@
   module.exports = server = connect.createServer(); //.apply(connect, middleware);
 
   function serverListening() {
-    console.log('Server running at ' + server.address().address + ':' + server.address().port);
+    console.log('Server running on ' + server.address().address + ':' + server.address().port);
   }
 
   if (require.main !== module) {
