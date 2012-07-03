@@ -1,25 +1,29 @@
+/*jshint strict:true node:true es5:true onevar:true laxcomma:true laxbreak:true eqeqeq:true immed:true latedef:true*/
 (function () {
   "use strict";
 
   require('bufferjs');
 
   try {
-    require('./tcp-echo');
-    require('./udp-echo');
+    //require('./tcp-echo');
+    //require('./udp-echo');
   } catch(e) {
     console.warn("[TODO] switch tcp and udp ports for development");
   }
 
   var config = require('./config')
+    //, steve = require('steve')
     , connect = require('connect')
     , btoa = require('btoa')
     , url = require('url')
     , nqServer = require('./nq/lib').create()
     , fbServer
-    , echoServer
     , server
     , whatsmyip
     , sessions = {}
+    , ipcheck = /^\/(whatsmy|my|check)?ip($|\?|\/|#)/
+    , middleware
+    , app
     ;
 
   // clear out sessions occasionally
@@ -40,9 +44,6 @@
     return btoa(String(Date.now()).split('').sort(randomize).join('')).substr(0,16);
   }
 
-  var ipcheck = /^\/(whatsmy|my|check)?ip($|\?|\/|#)/
-    ;
-
   function echo(req, res, next) {
     var urlObj = {}
       , params
@@ -51,10 +52,6 @@
       , resHeaders
       , resBody
       ;
-
-    if (/GET/i.exec(req.method) && '/' === req.url && !req.body || /assets/.exec(req.url)) {
-      return next();
-    }
 
     // If the user just wants the IP address
     if (ipcheck.exec(req.url)) {
@@ -93,7 +90,7 @@
     */
 
     // if the socket is encrypted, this is probably https
-    urlObj.protocol = (req.connection.encrypted ? 'https:' : 'http:')
+    urlObj.protocol = (req.connection.encrypted ? 'https:' : 'http:');
     urlObj.host = req.headers.host;
     urlObj.hostname = urlObj.host.split(':')[0];
     urlObj.port = urlObj.host.split(':')[1];
@@ -248,43 +245,23 @@
     });
   }
 
-  fbServer = connect.createServer(
-      function (req, res, next) {
-        //console.log(req.subdomains);
-        next();
-      }
-    , connect.favicon()
-    , connect.bodyParser()
-    , bodySnatcher
-    , echo
-    , connect.static(__dirname + '/')
-  );
-
-  echoServer = connect.createServer(
-      function (req, res, next) {
-        next();
-      }
-    , connect.favicon()
-    , connect.bodyParser()
-    , bodySnatcher
-    , echo
-  );
-
-  /*
-    fbServer.listen(config.port);
-    console.log('Started on ' + config.port || 80);
-  */
-
-  whatsmyip = connect.createServer(function (req, res, next) {
-    // yes, it's that simple
-    res.setHeader('Content-Type', 'text/plain');
-    res.end(req.socket.remoteAddress);
-  });
-
-  // TODO enhance vhost with regex checkin'
-  var middleware
+  fbServer = connect.createServer()
+    .use(connect.favicon())
+    .use(connect.bodyParser())
+    .use(bodySnatcher)
+    .use(connect.static(__dirname + '/public/'))
+    .use(echo)
     ;
 
+  whatsmyip = connect.createServer()
+    .use(function (req, res, next) {
+        // yes, it's that simple
+        res.setHeader('Content-Type', 'text/plain');
+        res.end(req.socket.remoteAddress);
+      })
+    ;
+
+  // TODO enhance vhost with regex checkin'
   middleware = [];
 
   // TODO inspect subdomains instead of using vhost a second time
@@ -301,19 +278,30 @@
     , connect.vhost('*', fbServer)
   ];
 
-  module.exports = server = connect.createServer.apply(connect, middleware);
+  app = connect.createServer();
+  app.use(require('connect-subdomains')());
+  middleware.forEach(function (mw) {
+    app.use(mw);
+  });
 
-  function serverListening() {
-    console.log('Server running on ' + server.address().address + ':' + server.address().port);
+
+
+  module.exports = app;
+
+  function run() {
+    var port
+      ;
+
+    function serverListening() {
+      console.log('Server running on ' + server.address().address + ':' + server.address().port);
+    }
+
+    port = process.argv[2] || config.port || 0;
+    console.log('attempting port', port);
+    server = app.listen(port, serverListening);
   }
 
-  if (require.main !== module) {
-    return;
-  }
-
-  if (config.port) {
-    server.listen(config.port, serverListening);
-  } else {
-    server.listen(serverListening);
+  if (require.main === module) {
+    run();
   }
 }());

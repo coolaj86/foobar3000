@@ -13,11 +13,20 @@
     "node": ">= 0.4.12"
   },
   "dependencies": {
-    "btoa": "1.x",
+    "connect": "2.x",
+    "http-json": "1.x",
+    "connect_router": "1.x",
+    "connect-cookieless-session": "0.6.x",
     "nowww": "1.x",
-    "bufferjs": ">= 0.0.0",
-    "connect-cors": ">= 0.5.0",
-    "connect": "1.x"
+    "connect-pathname": "1.x",
+    "connect-subdomains": "1.x",
+    "connect-xcors": "0.5.x",
+    "express-chromeframe": "0.2.x",
+    "underscore": ">=1.3.3 <1.4.0",
+    "forEachAsync": ">=2.2.0 <2.3.0",
+    "optimist": ">=0.3.4 <0.4.0",
+    "btoa": "1.x",
+    "bufferjs": ">= 0.0.0"
   },
   "devDependencies": {}
 }

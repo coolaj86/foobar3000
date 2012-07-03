@@ -1,15 +1,18 @@
+/*jshint strict:true node:true es5:true onevar:true laxcomma:true laxbreak:true eqeqeq:true immed:true latedef:true*/
 (function () {
   "use strict";
 
   // extends the Buffer prototype
   require('bufferjs');
 
-  var connect = require('steve')
+  var steve = require('../../server/steve')
+    , connect = require('connect')
     , net = require('net')
     , udp = require('dgram')
     , UUID = require('node-uuid')
+    ;
 
-  function create() {
+  function createAll() {
     var mainServer
     , DB = {}
     , listeners = {}
@@ -34,7 +37,7 @@
       , "delete": function (key) {
           delete db[key];
         }
-    }
+    };
   };
 
   function getBodyData(req, res, next) {
@@ -46,7 +49,7 @@
     req.on('data', function (chunk) {
       size -= chunk.length;
 
-      if (!(size >= 0)) {
+      if (true !== (size >= 0)) {
         req.pause();
         res.error("Exceeded upload limit of " + String(UPLOAD_BYTE_LIMIT) + " bytes");
         res.json();
@@ -83,14 +86,19 @@
     }
 
     function createServer() {
-      return connect.createServer(
-          function (req, res, next) {
+      var app = connect.createServer()
+        ;
+
+      app
+        .use(function (req, res, next) {
             silo.keepAlive();
             next();
-          }
-        , getBodyData
-        , abstractHttpAndStore
-      )
+          })
+        .use(getBodyData)
+        .use(abstractHttpAndStore)
+        ;
+        
+      return app;
     }
     function getAddressAndRevel() {
       var address = server.address()
@@ -183,7 +191,7 @@
 
     // negating > is better than < because it catches NaN as well
     port = parseInt(req.body.port, 10);
-    if (undefined !== req.body.port && !(port > 1023)) {
+    if (undefined !== req.body.port && true !== (port > 1023)) {
       res.error("The port must be a decimal integer >= 1024. The lower \"well known\" ports are reserved for system use. Octal and hex are not supported");
       res.json();
       return;
@@ -221,7 +229,7 @@
 
     silo.add = function (data, meta) {
       silo.storageLength += data.length;
-      while (!(silo.storageLength <= TOTAL_UPLOAD_BYTE_LIMIT)) {
+      while (true !== (silo.storageLength <= TOTAL_UPLOAD_BYTE_LIMIT)) {
         silo.remove();
       }
 
@@ -258,7 +266,7 @@
     silo.keepAlive = function () {
       clearTimeout(silo.timeoutToken);
       silo.timeoutToken = setTimeout(silo.closeServer, LISTENER_STALETIME);
-    }
+    };
 
     silo.closeServer = function (onServerClose) {
       clearTimeout(silo.timeoutToken);
@@ -277,7 +285,7 @@
 
       silo.server.close();
       silo.destroy();
-    }
+    };
 
     silo.remove = function (index) {
       var payload
@@ -407,13 +415,13 @@
     app.delete('/:resource/:index', get);
   }
 
-  mainServer = connect.createServer(
-      connect.bodyParser()
-    , connect.router(router)
-  );
+  mainServer = connect.createServer()
+    .use(connect.bodyParser())
+    .use(connect.router(router))
+    ;
 
     return mainServer;
   }
 
-  module.exports.create = create;
+  module.exports.create = createAll;
 }());
